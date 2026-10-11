@@ -1450,7 +1450,7 @@
             params.set('d', dur);
             params.set('dt', dt);
 
-            return ${baseUrl}?;
+            return `${baseUrl}?${params.toString()}`;
         }
 
         const DRAFT_KEY = 'klinixy_generator_active_draft';
@@ -1523,7 +1523,7 @@
             previewEmployeeId.textContent = 'EMP: ' + empId;
             previewIssueDate.textContent = issueDate.value.trim() || 'Date';
             previewDescription.textContent = certificateDescription.value.trim() || '';
-            statusIdBadge.textContent = ${certId} | EMP: ;
+            statusIdBadge.textContent = `${certId} | EMP: ${empId}`;
 
             saveFormDraft();
             saveToRegistry(false);
@@ -1538,7 +1538,7 @@
         /**
          * Generate unique Certificate ID (KLX-2026-XXXX)
          */
-         {
+        function generateNewCertId() {
             const year = new Date().getFullYear();
             const randomSuffix = Math.floor(1000 + Math.random() * 9000);
             certificateId.value = 'KLX-' + year + '-' + randomSuffix;
