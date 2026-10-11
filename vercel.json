@@ -2,15 +2,15 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/verify.html"
+      "source": "/generator",
+      "destination": "/generator.html"
     },
     {
       "source": "/verify",
-      "destination": "/verify.html"
+      "destination": "/index.html"
     },
     {
-      "source": "/generator",
+      "source": "/verify.html",
       "destination": "/index.html"
     }
   ],

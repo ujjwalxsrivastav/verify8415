@@ -75,8 +75,9 @@
             text-decoration: none;
         }
         .brand img {
-            height: 42px;
+            height: 52px;
             width: auto;
+            max-width: 200px;
             display: block;
             object-fit: contain;
         }
@@ -362,24 +363,25 @@
 
         .cert-top-logo {
             position: absolute;
-            top: 48px;
-            left: 60px;
+            top: 38px;
+            left: 54px;
             z-index: 5;
             display: flex;
             align-items: center;
         }
         .cert-top-logo img {
-            height: 76px;
+            height: 98px;
             width: auto;
-            max-width: 250px;
+            max-width: 280px;
             display: block;
             object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
         }
 
         .cert-top-motto {
             position: absolute;
-            top: 48px;
-            right: 65px;
+            top: 42px;
+            right: 60px;
             z-index: 5;
             text-align: right;
         }
@@ -402,7 +404,7 @@
 
         .cert-title-section {
             position: absolute;
-            top: 136px;
+            top: 148px;
             left: 0;
             width: 100%;
             text-align: center;
@@ -538,12 +540,12 @@
 
         .cert-bottom-grid {
             position: absolute;
-            bottom: 70px;
-            left: 60px;
-            right: 60px;
+            bottom: 58px;
+            left: 65px;
+            right: 65px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center;
             z-index: 5;
         }
 
@@ -596,28 +598,34 @@
         }
 
         .qr-block {
-            width: 190px;
+            width: 240px;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
         }
         .qr-card {
             background: #ffffff;
-            padding: 6px;
-            border-radius: 10px;
-            border: 1.5px solid rgba(197, 160, 68, 0.45);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            padding: 8px;
+            border-radius: 12px;
+            border: 2px solid #C5A044;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
             display: inline-block;
         }
         #qrCanvas {
-            width: 88px;
-            height: 88px;
-            display: block;
+            width: 104px;
+            height: 104px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         #qrCanvas img, #qrCanvas canvas {
+            width: 104px !important;
+            height: 104px !important;
             display: block;
             border-radius: 4px;
+            image-rendering: pixelated;
         }
         .qr-scan-label {
             font-family: 'Inter', sans-serif;
@@ -644,12 +652,13 @@
         }
         .qr-emp-id {
             font-family: 'Inter', monospace;
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 700;
             color: #0E7A94;
-            background: rgba(14, 122, 148, 0.08);
-            padding: 1px 6px;
+            background: rgba(14, 122, 148, 0.09);
+            padding: 2px 8px;
             border-radius: 4px;
+            border: 1px solid rgba(14, 122, 148, 0.2);
         }
 
         .cert-footer-bar {
@@ -1109,37 +1118,78 @@
 
         function ingestUrlPayload() {
             const urlParams = new URLSearchParams(window.location.search);
-            const rawPayload = urlParams.get('c') || urlParams.get('data');
 
+            // 1. Direct clean query params (fastest, most reliable & scannable)
+            const certId = (urlParams.get('id') || urlParams.get('certId') || '').trim();
+            const empId = (urlParams.get('eid') || urlParams.get('empId') || '').trim();
+            const name = (urlParams.get('n') || urlParams.get('name') || '').trim();
+            const role = (urlParams.get('r') || urlParams.get('role') || '').trim();
+            const duration = (urlParams.get('d') || urlParams.get('dur') || urlParams.get('duration') || '').trim();
+            const issueDate = (urlParams.get('dt') || urlParams.get('date') || urlParams.get('issueDate') || '').trim();
+            const desc = (urlParams.get('desc') || urlParams.get('description') || '').trim();
+
+            if (certId && name) {
+                const record = {
+                    id: certId,
+                    certificateId: certId,
+                    employeeId: empId || 'KLX-EMP-8415',
+                    name: name,
+                    role: role || 'Software Development Intern',
+                    duration: duration || 'January 2026 – June 2026',
+                    issueDate: issueDate || '11 October 2026',
+                    description: desc || 'Successfully completed the internship by demonstrating exceptional technical ability, professionalism, innovation, teamwork and commitment while contributing towards healthcare technology solutions developed at Klinixy LLP.',
+                    organization: 'Klinixy LLP',
+                    signatory: 'Ujjwal Srivastav (Founder & CEO)',
+                    status: 'VERIFIED & ACTIVE',
+                    timestamp: new Date().toISOString()
+                };
+
+                fullRegistry[certId] = record;
+                if (empId) fullRegistry[empId] = record;
+
+                try {
+                    let reg = {};
+                    const existing = localStorage.getItem(REGISTRY_KEY);
+                    if (existing) reg = JSON.parse(existing);
+                    reg[certId] = record;
+                    if (empId) reg[empId] = record;
+                    localStorage.setItem(REGISTRY_KEY, JSON.stringify(reg));
+                } catch(e) {}
+
+                return certId;
+            }
+
+            // 2. Base64 encoded payload fallback
+            const rawPayload = urlParams.get('c') || urlParams.get('data');
             if (rawPayload) {
                 try {
                     const decodedStr = decodeURIComponent(escape(atob(rawPayload)));
                     const record = JSON.parse(decodedStr);
 
                     if (record && record.name) {
-                        const certId = record.certificateId || record.id || 'KLX-CERT';
-                        const empId = record.employeeId || 'KLX-EMP';
-                        record.certificateId = certId;
-                        record.employeeId = empId;
-                        record.id = certId;
+                        const cId = record.certificateId || record.id || 'KLX-CERT';
+                        const eId = record.employeeId || 'KLX-EMP';
+                        record.certificateId = cId;
+                        record.employeeId = eId;
+                        record.id = cId;
 
-                        fullRegistry[certId] = record;
-                        fullRegistry[empId] = record;
+                        fullRegistry[cId] = record;
+                        if (eId) fullRegistry[eId] = record;
 
                         try {
                             let reg = {};
                             const existing = localStorage.getItem(REGISTRY_KEY);
                             if (existing) reg = JSON.parse(existing);
-                            reg[certId] = record;
-                            if (empId) reg[empId] = record;
+                            reg[cId] = record;
+                            if (eId) reg[eId] = record;
                             localStorage.setItem(REGISTRY_KEY, JSON.stringify(reg));
                         } catch(e) {}
 
-                        return certId;
+                        return cId;
                     }
                 } catch(e) {}
             }
-            return null;
+            return certId || empId || null;
         }
 
         function findRecord(query) {
@@ -1183,8 +1233,8 @@
             try {
                 new QRCode(qrCanvas, {
                     text: window.location.href,
-                    width: 88,
-                    height: 88,
+                    width: 208,
+                    height: 208,
                     correctLevel: QRCode.CorrectLevel.M,
                     colorDark: '#0A4354',
                     colorLight: '#ffffff'
